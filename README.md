@@ -47,6 +47,8 @@ pnpm build
 
 The built app can be found at `src-tauri/target/release`
 
+If you use Nix, this repository includes a `flake.nix` dev shell with the Rust, Node.js, pnpm, and Tauri system dependencies needed to compile and run the app.
+
 ## Donate
 
 If you wish to support the development of this GUI, you can do so [here](https://encroissant.org/support). All donations are greatly appreciated!
