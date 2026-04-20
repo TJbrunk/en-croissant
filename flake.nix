@@ -24,7 +24,20 @@
           openssl
           libsoup_3
           librsvg
+          gst_all_1.gstreamer
+          gst_all_1."gst-plugins-base"
+          gst_all_1."gst-plugins-good"
+          gst_all_1."gst-plugins-bad"
         ];
+
+        gstreamerPackages = [
+          pkgs.gst_all_1.gstreamer
+          pkgs.gst_all_1."gst-plugins-base"
+          pkgs.gst_all_1."gst-plugins-good"
+          pkgs.gst_all_1."gst-plugins-bad"
+        ];
+
+        gstreamerPluginPath = lib.makeSearchPath "lib/gstreamer-1.0" gstreamerPackages;
 
         commonPackages = with pkgs; [
           nodejs_22
@@ -51,6 +64,10 @@
           openssl
           libsoup_3
           librsvg
+          gst_all_1.gstreamer
+          gst_all_1."gst-plugins-base"
+          gst_all_1."gst-plugins-good"
+          gst_all_1."gst-plugins-bad"
         ];
 
         darwinPackages = with pkgs; [
@@ -104,12 +121,17 @@
           installPhase = ''
             runHook preInstall
             install -Dm755 src-tauri/target/release/en-croissant $out/bin/en-croissant
+            mkdir -p $out/share/en-croissant
+            cat > $out/share/en-croissant/env <<EOF
+            export PATH="$out/bin:\$PATH"
+            EOF
             runHook postInstall
           '';
 
           postFixup = lib.optionalString pkgs.stdenv.isLinux ''
             wrapProgram $out/bin/en-croissant \
               --prefix LD_LIBRARY_PATH : ${lib.makeLibraryPath linuxLibraries} \
+              --prefix GST_PLUGIN_SYSTEM_PATH_1_0 : ${gstreamerPluginPath} \
               --prefix XDG_DATA_DIRS : ${pkgs.gsettings-desktop-schemas}/share/gsettings-schemas/${pkgs.gsettings-desktop-schemas.name}:${pkgs.gtk3}/share/gsettings-schemas/${pkgs.gtk3.name}
           '';
         };
@@ -138,6 +160,7 @@
             ]
             ++ lib.optionals pkgs.stdenv.isLinux [
               "export LD_LIBRARY_PATH=\"${lib.makeLibraryPath linuxLibraries}:$LD_LIBRARY_PATH\""
+              "export GST_PLUGIN_SYSTEM_PATH_1_0=\"${gstreamerPluginPath}:$GST_PLUGIN_SYSTEM_PATH_1_0\""
               "export XDG_DATA_DIRS=\"${pkgs.gsettings-desktop-schemas}/share/gsettings-schemas/${pkgs.gsettings-desktop-schemas.name}:${pkgs.gtk3}/share/gsettings-schemas/${pkgs.gtk3.name}:$XDG_DATA_DIRS\""
             ]
           );
